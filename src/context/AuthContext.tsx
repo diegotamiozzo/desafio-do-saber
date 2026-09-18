@@ -80,11 +80,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
-    void fetch('/api/auth/logout', { method: 'POST' }).finally(() => {
-      setIsAuthenticated(false);
-      setUser(null);
-      localStorage.removeItem(AUTH_STORAGE_KEY);
-      localStorage.removeItem(`${AUTH_STORAGE_KEY}_user`);
+    setIsAuthenticated(false);
+    setUser(null);
+    localStorage.removeItem(AUTH_STORAGE_KEY);
+    localStorage.removeItem(`${AUTH_STORAGE_KEY}_user`);
+
+    void fetch('/api/auth/logout', { method: 'POST' }).catch((error) => {
+      console.warn('Não foi possível encerrar a sessão no servidor:', error);
     });
   };
 
