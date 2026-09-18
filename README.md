@@ -191,7 +191,7 @@ BTN:2
 5. O ícone ficará verde quando a porta estiver conectada.
 6. Inicie a partida; o primeiro botão pressionado será reconhecido como jogador 1 ou jogador 2.
 
-O navegador precisa estar em um contexto seguro para Web Serial: `localhost` funciona localmente; em produção use HTTPS. Se o ESP32 não estiver conectado, as teclas `1` e `2` continuam disponíveis como fallback.
+O navegador precisa estar em um contexto seguro para Web Serial: `localhost` funciona localmente; em produção, abra diretamente a URL HTTPS do Netlify (não uma URL HTTP nem um iframe). Use a versão atual do Google Chrome ou Microsoft Edge em um computador; Firefox, Safari e navegadores móveis normalmente não oferecem Web Serial. Se o ESP32 não estiver conectado, as teclas `1` e `2` continuam disponíveis como fallback.
 
 ### Protocolo USB
 

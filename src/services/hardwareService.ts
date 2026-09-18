@@ -204,11 +204,27 @@ export class UsbSerialHardwareService implements IHardwareService {
   private lastPressedTimestamp: number | null = null;
 
   public async connect(): Promise<boolean> {
-    if (!navigator.serial) {
-      throw new Error('Web Serial não é suportado neste navegador. Use Chrome ou Edge.');
+    if (!window.isSecureContext) {
+      throw new Error(
+        'A conexão USB exige HTTPS. Abra o endereço seguro do Netlify diretamente no Chrome ou Edge.'
+      );
     }
 
-    this.port = await navigator.serial.requestPort();
+    if (!navigator.serial) {
+      throw new Error(
+        'Web Serial não é suportado neste navegador. Use a versão atual do Google Chrome ou Microsoft Edge em um computador.'
+      );
+    }
+
+    try {
+      this.port = await navigator.serial.requestPort();
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'NotFoundError') {
+        throw new Error('Nenhuma porta USB foi selecionada. Escolha a porta do ESP32 para continuar.');
+      }
+      throw error;
+    }
+
     await this.port.open({ baudRate: 115200 });
     this.connected = true;
     this.notifyStatus();
