@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -23,11 +23,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
 
   const login = (username: string, pass: string): boolean => {
-    const expectedUser = (import.meta as any).env?.VITE_ADMIN_USER || 'admin';
-    const expectedPass = (import.meta as any).env?.VITE_ADMIN_PASS || 'admin';
+    const expectedUser = import.meta.env.VITE_ADMIN_USER;
+    const expectedPass = import.meta.env.VITE_ADMIN_PASS;
 
-    // Aceita admin/admin configurado no .env
-    if (username.trim() === expectedUser && pass === expectedPass) {
+    if (
+      expectedUser &&
+      expectedPass &&
+      username.trim() === expectedUser.trim() &&
+      pass === expectedPass
+    ) {
       setIsAuthenticated(true);
       setUser(username.trim());
       localStorage.setItem(AUTH_STORAGE_KEY, 'true');

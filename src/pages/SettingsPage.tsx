@@ -24,15 +24,18 @@ export const SettingsPage: React.FC = () => {
 
   const [step, setStep] = useState<'config' | 'preview'>('config');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [generationError, setGenerationError] = useState<string | null>(null);
 
   const handleGenerate = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     setIsGenerating(true);
+    setGenerationError(null);
     try {
       await gerarPerguntas(config);
       setStep('preview');
     } catch (err) {
       console.error('Erro ao gerar perguntas:', err);
+      setGenerationError(err instanceof Error ? err.message : 'Não foi possível gerar perguntas pela API Groq.');
     } finally {
       setIsGenerating(false);
     }
@@ -150,6 +153,12 @@ export const SettingsPage: React.FC = () => {
             </div>
 
             {/* Botão de Geração */}
+            {generationError && (
+              <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+                <strong>Não foi possível gerar as perguntas.</strong>
+                <p className="mt-1">{generationError}</p>
+              </div>
+            )}
             <div className="pt-2 flex justify-center">
               <motion.button
                 whileHover={{ scale: 1.03 }}

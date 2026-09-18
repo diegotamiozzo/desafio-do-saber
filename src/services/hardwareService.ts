@@ -140,56 +140,6 @@ export class MockHardwareService implements IHardwareService {
 }
 
 /**
- * ModbusHardwareServiceStub
- * Preparação de arquitetura para a integração física futura:
- * ESP32 -> RS485 -> Modbus RTU -> Computador -> Web Serial API / Serial Port.
- *
- * Mapeamento Modbus previsto:
- * - Slave Address: 1
- * - Discrete Input / Coil 0x0001: Botão Jogador 1
- * - Discrete Input / Coil 0x0002: Botão Jogador 2
- * - Baud rate: 9600 ou 115200 bps
- */
-export class ModbusHardwareServiceStub implements IHardwareService {
-  private fallbackService = new MockHardwareService();
-
-  public async connect(): Promise<boolean> {
-    console.info('[ModbusHardwareService] Arquitetura desacoplada pronta para Web Serial API & Modbus RTU.');
-    return this.fallbackService.connect();
-  }
-
-  public async disconnect(): Promise<void> {
-    return this.fallbackService.disconnect();
-  }
-
-  public onButtonPress(callback: ButtonPressCallback): () => void {
-    return this.fallbackService.onButtonPress(callback);
-  }
-
-  public simulatePress(player: PlayerId): void {
-    this.fallbackService.simulatePress(player);
-  }
-
-  public getStatus(): HardwareStatus {
-    return {
-      connected: true,
-      mode: 'modbus',
-      name: 'ESP32 Modbus RTU (Preparado)',
-      lastPressedPlayer: null,
-      lastPressedTimestamp: null,
-    };
-  }
-
-  public subscribeStatus(callback: (status: HardwareStatus) => void): () => void {
-    return this.fallbackService.subscribeStatus(callback);
-  }
-
-  public setKeyboardEnabled(enabled: boolean): void {
-    this.fallbackService.setKeyboardEnabled(enabled);
-  }
-}
-
-/**
  * Usa o teclado como fallback e lê eventos BTN:1/BTN:2 de um ESP32 conectado
  * por USB Serial. A permissão da porta deve ser concedida por um clique do usuário.
  */
@@ -206,7 +156,7 @@ export class UsbSerialHardwareService implements IHardwareService {
   public async connect(): Promise<boolean> {
     if (!window.isSecureContext) {
       throw new Error(
-        'A conexão USB exige HTTPS. Abra o endereço seguro do Netlify diretamente no Chrome ou Edge.'
+        'A conexão USB exige HTTPS. Abra a URL do Render diretamente no Chrome ou Edge.'
       );
     }
 

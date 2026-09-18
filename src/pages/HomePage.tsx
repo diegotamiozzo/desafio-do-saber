@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { Sparkles, Settings, Play, Cpu } from 'lucide-react';
+import { Sparkles, Settings, Play } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { PLAYERS } from '../data/constants';
 import { GameHeader } from '../components/GameHeader';

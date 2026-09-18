@@ -11,21 +11,10 @@ const PORT = Number(process.env.PORT) || 3000;
 
 app.use(express.json());
 
-// Permite conexões CORS para quando o frontend estiver no Netlify e o backend no Render
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
-  }
-  next();
-});
-
 // Inicializa o cliente Groq de forma segura
 let groqClient: Groq | null = null;
 function getGroq(): Groq | null {
-  const apiKey = process.env.GROQ_API_KEY || process.env.ROQ_API_KEY;
+  const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
     return null;
   }
@@ -56,11 +45,9 @@ app.post('/api/perguntas/gerar', async (req, res) => {
   const finalTheme = (tema === 'Personalizado' && temaPersonalizado) ? temaPersonalizado : tema;
 
   if (!groq) {
-    return res.json({
-      success: true,
-      source: 'mock',
-      message: 'GROQ_API_KEY não configurada. Utilizando banco local curado.',
-      perguntas: null,
+    return res.status(503).json({
+      success: false,
+      error: 'GROQ_API_KEY não configurada no servidor.',
     });
   }
 
@@ -186,13 +173,10 @@ Regras Estritas:
       ? 'Limite temporário por minuto da Groq atingido. O gerador inteligente local garantiu as perguntas sobre o seu tema.'
       : 'IA Groq temporariamente indisponível. Ativando gerador temático inteligente.';
 
-    // Fallback limpo caso haja instabilidade momentânea
-    return res.json({
-      success: true,
-      source: 'smart_local',
+    return res.status(isRateLimit ? 429 : 502).json({
+      success: false,
       error: errorMsg,
       notice,
-      perguntas: null,
     });
   }
 });

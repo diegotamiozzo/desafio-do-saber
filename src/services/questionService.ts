@@ -1,6 +1,4 @@
 import { GameConfig, Question, QuestionCount } from '../types';
-import { MOCK_QUESTIONS_BANK } from '../data/mockQuestions';
-import { buildApiUrl } from '../config/api';
 
 export interface ValidationResult {
   valid: boolean;
@@ -91,196 +89,11 @@ export function validateQuestionsList(questions: Question[], expectedCount: Ques
 }
 
 /**
- * Normaliza strings para busca sem acentos e minúsculas
- */
-function normalizeText(text: string): string {
-  return text
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .trim();
-}
-
-/**
- * Verifica relevância de uma pergunta para um determinado contexto textual
- */
-function calculateQuestionRelevance(q: Question, contextNormalized: string): number {
-  if (!contextNormalized) return 0;
-
-  const fullQuestionText = normalizeText(
-    `${q.pergunta} ${q.tema} ${q.curiosidade || ''} ${q.alternativas.map((a) => a.texto).join(' ')}`
-  );
-
-  // Verificações específicas para termos regionais (ex: Rio Grande do Sul)
-  const isRSContext =
-    contextNormalized.includes('rio grande do sul') ||
-    contextNormalized.includes('rs') ||
-    contextNormalized.includes('gaucho') ||
-    contextNormalized.includes('porto alegre') ||
-    contextNormalized.includes('pampa') ||
-    contextNormalized.includes('chimarrao');
-
-  if (isRSContext) {
-    if (q.tema.toLowerCase().includes('rio grande do sul')) {
-      return 100;
-    }
-    const rsTerms = ['porto alegre', 'chimarrao', 'quero-quero', 'gaucho', 'churrasco', 'pampa', 'gaita', 'bombacha', 'pinhao', 'cavalo crioulo', 'gramado', 'sul'];
-    for (const term of rsTerms) {
-      if (fullQuestionText.includes(term)) {
-        return 80;
-      }
-    }
-  }
-
-  // Busca por termos específicos presentes no contexto
-  const words = contextNormalized
-    .split(/[\s,.-]+/)
-    .filter((w) => w.length > 2 && !['para', 'com', 'que', 'dos', 'das', 'uma', 'sobre'].includes(w));
-
-  let score = 0;
-  for (const word of words) {
-    if (fullQuestionText.includes(word)) {
-      score += 20;
-    }
-  }
-
-  return score;
-}
-
-/**
- * MockQuestionService
- * Gera a quantidade configurada de perguntas infantis, priorizando rigorosamente o contexto e tema.
- */
-export class MockQuestionService implements IQuestionService {
-  public validateQuestion(question: Partial<Question>): ValidationResult {
-    return validateQuestion(question);
-  }
-
-  public validateQuestionsList(questions: Question[], expectedCount?: QuestionCount): ValidationResult {
-    return validateQuestionsList(questions, expectedCount);
-  }
-
-  public async generateQuestions(config: GameConfig): Promise<Question[]> {
-    // Simula pequena latência para feedback de carregamento
-    await new Promise((resolve) => setTimeout(resolve, 400));
-
-    const targetTheme = config.tema === 'Personalizado' && config.temaPersonalizado.trim()
-      ? config.temaPersonalizado.trim()
-      : config.tema;
-
-    const rawContext = [config.contexto, config.temaPersonalizado].filter(Boolean).join(' ');
-    const contextNormalized = normalizeText(rawContext);
-
-    // 1. Classifica todo o banco de perguntas por relevância ao contexto
-    const scoredQuestions = MOCK_QUESTIONS_BANK.map((q) => ({
-      question: q,
-      relevance: calculateQuestionRelevance(q, contextNormalized),
-    }));
-
-    // Separa as perguntas que têm relação direta com o contexto
-    const directMatches = scoredQuestions
-      .filter((sq) => sq.relevance > 0)
-      .sort((a, b) => b.relevance - a.relevance)
-      .map((sq) => sq.question);
-
-    let selected: Question[] = [];
-
-    if (directMatches.length >= config.quantidade) {
-      // Temos perguntas suficientes do próprio contexto no banco (como Rio Grande do Sul!)
-      selected = directMatches.slice(0, config.quantidade);
-    } else if (directMatches.length > 0) {
-      // Usa todas as perguntas do contexto encontradas
-      selected = [...directMatches];
-
-      // Completa com perguntas do mesmo tema ou gerais
-      const remainingBank = MOCK_QUESTIONS_BANK.filter(
-        (q) => !selected.some((sq) => sq.id === q.id)
-      );
-
-      // Filtra por tema
-      const sameTheme = remainingBank.filter(
-        (q) => q.tema.toLowerCase() === targetTheme.toLowerCase()
-      );
-
-      const toAdd = [...sameTheme, ...remainingBank];
-      for (const q of toAdd) {
-        if (selected.length >= config.quantidade) break;
-        if (!selected.some((sq) => sq.id === q.id)) {
-          selected.push(q);
-        }
-      }
-    } else {
-      // Nenhum termo específico encontrado no banco, filtra por tema
-      let themeFiltered = MOCK_QUESTIONS_BANK.filter((q) => {
-        if (targetTheme === 'Conhecimentos Gerais' || targetTheme === 'Curiosidades') {
-          return true;
-        }
-        return q.tema.toLowerCase() === targetTheme.toLowerCase();
-      });
-
-      if (themeFiltered.length < config.quantidade) {
-        const others = MOCK_QUESTIONS_BANK.filter((q) => !themeFiltered.some((tf) => tf.id === q.id));
-        themeFiltered = [...themeFiltered, ...others];
-      }
-
-      // Embaralha
-      selected = [...themeFiltered].sort(() => Math.random() - 0.5).slice(0, config.quantidade);
-    }
-
-    // 2. Ajusta IDs, formata tema e embaralha alternativas
-    const result: Question[] = selected.slice(0, config.quantidade).map((q, index) => {
-      const questionTema = targetTheme || q.tema;
-
-      const correctAlternativeText =
-        q.alternativas.find((a) => a.id === q.respostaCorreta)?.texto || q.alternativas[0].texto;
-
-      const textsShuffled = [...q.alternativas.map((a) => a.texto)].sort(() => Math.random() - 0.5);
-
-      const newAlternatives = (['A', 'B', 'C', 'D'] as const).map((letter, i) => ({
-        id: letter,
-        texto: textsShuffled[i],
-      }));
-
-      const newCorrectLetter =
-        newAlternatives.find((a) => a.texto === correctAlternativeText)?.id || 'A';
-
-      const adaptedQuestion: Question = {
-        id: index + 1,
-        pergunta: q.pergunta,
-        alternativas: newAlternatives,
-        respostaCorreta: newCorrectLetter,
-        dificuldade: config.dificuldade,
-        tema: q.tema === 'Rio Grande do Sul' ? 'Rio Grande do Sul' : questionTema,
-        emoji: q.emoji || '⭐',
-        curiosidade: q.curiosidade,
-      };
-
-      return adaptedQuestion;
-    });
-
-    const validation = this.validateQuestionsList(result, config.quantidade);
-    if (!validation.valid) {
-      console.warn('Erros na validação de perguntas locais:', validation.errors);
-    }
-
-    return result;
-  }
-}
-
-export interface GenerationResponseData {
-  questions: Question[];
-  source: 'groq' | 'gemini' | 'smart_offline';
-  notice?: string;
-}
-
-/**
  * GroqQuestionService
  * Chama o backend com a API Groq para gerar a quantidade configurada de perguntas.
- * Se houver qualquer indisponibilidade de rede, recorre automaticamente ao gerador context-aware inteligente.
  */
 export class GroqQuestionService implements IQuestionService {
-  private fallbackService = new MockQuestionService();
-  public lastGenerationSource: 'groq' | 'gemini' | 'smart_offline' = 'smart_offline';
+  public lastGenerationSource: 'groq' = 'groq';
   public lastNotice?: string;
 
   public validateQuestion(question: Partial<Question>): ValidationResult {
@@ -293,7 +106,7 @@ export class GroqQuestionService implements IQuestionService {
 
   public async generateQuestions(config: GameConfig): Promise<Question[]> {
     try {
-      const response = await fetch(buildApiUrl('/api/perguntas/gerar'), {
+      const response = await fetch('/api/perguntas/gerar', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -313,38 +126,23 @@ export class GroqQuestionService implements IQuestionService {
 
       const data = await response.json();
 
-      if ((data.source === 'groq' || data.source === 'gemini') && Array.isArray(data.perguntas) && data.perguntas.length >= config.quantidade) {
-        let qs: Question[] = data.perguntas;
-        if (qs.length < config.quantidade) {
-          const fallbackQs = await this.fallbackService.generateQuestions(config);
-          const needed = config.quantidade - qs.length;
-          qs = [...qs, ...fallbackQs.slice(0, needed)].map((q, idx) => ({ ...q, id: idx + 1 }));
-        }
-        const validation = this.validateQuestionsList(qs.slice(0, config.quantidade), config.quantidade);
+      if (data.source === 'groq' && Array.isArray(data.perguntas)) {
+        const qs = data.perguntas as Question[];
+        const validation = this.validateQuestionsList(qs, config.quantidade);
         if (validation.valid) {
-          this.lastGenerationSource = data.source === 'gemini' ? 'gemini' : 'groq';
+          this.lastGenerationSource = 'groq';
           this.lastNotice = undefined;
-          return qs.slice(0, config.quantidade);
+          return qs;
         }
+        throw new Error(`Perguntas inválidas recebidas da API Groq: ${validation.errors.join(' ')}`);
       }
 
-      if (data.source === 'smart_local' && Array.isArray(data.perguntas) && data.perguntas.length === config.quantidade) {
-        this.lastGenerationSource = 'smart_offline';
-        this.lastNotice = data.notice || data.error;
-        return data.perguntas;
-      }
-
-      if (data.error) {
-        this.lastNotice = data.notice || 'IA temporariamente indisponível. Gerador contextual ativado.';
-      }
+      throw new Error(data.notice || data.error || 'A API Groq não retornou perguntas válidas.');
     } catch (err) {
-      console.warn('Comunicação com API Groq indisponível, acionando gerador contextual local:', err);
+      this.lastNotice = err instanceof Error ? err.message : 'Não foi possível gerar perguntas pela API Groq.';
+      throw err;
     }
-
-    this.lastGenerationSource = 'smart_offline';
-    return this.fallbackService.generateQuestions(config);
   }
 }
 
-// Exporta o serviço ativo com Groq AI e fallback contextual
 export const questionService = new GroqQuestionService();

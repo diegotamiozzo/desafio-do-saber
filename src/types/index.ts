@@ -77,7 +77,7 @@ export interface GameState {
   respostaSelecionada: 'A' | 'B' | 'C' | 'D' | null;
   partidaFinalizada: boolean;
   historicoRespostas: AnswerRecord[];
-  generationSource?: 'groq' | 'gemini' | 'smart_offline';
+  generationSource?: 'groq';
   generationNotice?: string;
 }
 
@@ -85,7 +85,7 @@ export type ButtonPressCallback = (player: PlayerId) => void;
 
 export interface HardwareStatus {
   connected: boolean;
-  mode: 'mock' | 'modbus' | 'webserial';
+  mode: 'mock' | 'webserial';
   name: string;
   lastPressedPlayer: PlayerId | null;
   lastPressedTimestamp: number | null;

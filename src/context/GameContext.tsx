@@ -208,7 +208,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (err) {
       console.error('Erro ao gerar perguntas:', err);
       setState((curr) => ({ ...curr, estado: 'IDLE' }));
-      return [];
+      throw err;
     }
   }, [config]);
 

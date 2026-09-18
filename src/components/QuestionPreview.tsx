@@ -21,8 +21,6 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
 }) => {
   const { config, state } = useGame();
 
-  const isGroqAI = state.generationSource === 'groq';
-  const isGeminiAI = state.generationSource === 'gemini';
   const displayTheme = config.tema === 'Personalizado' && config.temaPersonalizado ? config.temaPersonalizado : config.tema;
 
   return (
@@ -54,19 +52,8 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
           )}
 
           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 font-semibold text-xs border border-slate-200">
-            {isGroqAI ? (
-              <>
-                <Sparkles className="w-3 h-3 text-orange-500" />
-                <span>IA Groq (gpt-oss-20b)</span>
-              </>
-            ) : isGeminiAI ? (
-              <>
-                <Sparkles className="w-3 h-3 text-indigo-500" />
-                <span>IA Gemini</span>
-              </>
-            ) : (
-              <span>Gerador Temático Inteligente</span>
-            )}
+            <Sparkles className="w-3 h-3 text-orange-500" />
+            <span>IA Groq (gpt-oss-20b)</span>
           </span>
         </div>
 

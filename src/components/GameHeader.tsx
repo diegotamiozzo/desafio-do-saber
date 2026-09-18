@@ -97,7 +97,7 @@ export const GameHeader: React.FC<GameHeaderProps> = ({ showBackHome = true }) =
           {/* Sair / Trocar Usuário */}
           <button
             onClick={handleLogout}
-            title={`Sair (${user || 'admin'})`}
+            title={user ? `Sair (${user})` : 'Sair'}
             className="p-2 rounded-xl text-slate-500 hover:text-rose-600 hover:bg-rose-50 border border-slate-200 transition-colors cursor-pointer"
           >
             <LogOut className="w-4 h-4" />
