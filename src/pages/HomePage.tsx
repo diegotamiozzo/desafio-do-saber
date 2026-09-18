@@ -1,32 +1,12 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { Sparkles, Settings, Play } from 'lucide-react';
-import { useGame } from '../context/GameContext';
+import { Sparkles, Settings } from 'lucide-react';
 import { PLAYERS } from '../data/constants';
 import { GameHeader } from '../components/GameHeader';
 
 export const HomePage: React.FC = () => {
   const navigate = useNavigate();
-  const { gerarPerguntas, iniciarJogo, state } = useGame();
-  const [isPreparing, setIsPreparing] = React.useState(false);
-
-  const handleStartQuickGame = async () => {
-    setIsPreparing(true);
-    try {
-      // Se não houver perguntas geradas, gera o lote inicial configurado
-      if (!state.perguntas || state.perguntas.length === 0) {
-        await gerarPerguntas();
-      }
-      iniciarJogo();
-      navigate('/jogo');
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setIsPreparing(false);
-    }
-  };
-
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-sky-50 via-amber-50/40 to-pink-50/30">
       <GameHeader showBackHome={false} />
@@ -94,27 +74,16 @@ export const HomePage: React.FC = () => {
             </div>
           </div>
 
-          {/* Botões de Ação Principais */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-md mx-auto pt-2">
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              disabled={isPreparing}
-              onClick={handleStartQuickGame}
-              className="w-full sm:flex-1 py-3.5 px-6 rounded-xl font-fun font-bold text-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm cursor-pointer flex items-center justify-center gap-2 transition-colors"
-            >
-              <Play className="w-5 h-5 fill-white" />
-              <span>{isPreparing ? 'Carregando...' : 'Iniciar Partida'}</span>
-            </motion.button>
-
+          {/* Ação principal */}
+          <div className="flex justify-center pt-2">
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => navigate('/configuracoes')}
-              className="w-full sm:flex-1 py-3.5 px-5 rounded-xl font-fun font-bold text-base text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 shadow-2xs cursor-pointer flex items-center justify-center gap-2 transition-colors"
+              className="w-full max-w-md py-3.5 px-6 rounded-xl font-fun font-bold text-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm cursor-pointer flex items-center justify-center gap-2 transition-colors"
             >
-              <Settings className="w-4 h-4 text-slate-600" />
-              <span>Configurações</span>
+              <Settings className="w-5 h-5" />
+              <span>Configurar Partida</span>
             </motion.button>
           </div>
           <div className="mt-7 pt-4 border-t border-slate-100 flex items-center justify-center gap-2 text-xs text-slate-500 font-medium">

@@ -1,14 +1,13 @@
 import React, { useEffect } from 'react';
 import { motion } from 'motion/react';
 import confetti from 'canvas-confetti';
-import { Trophy, RotateCcw, Settings, Home } from 'lucide-react';
+import { Trophy, RotateCcw, Settings } from 'lucide-react';
 import { MatchScore } from '../types';
 import { PLAYERS } from '../data/constants';
 
 interface GameOverProps {
   score: MatchScore;
   onPlayAgain: () => void;
-  onGoHome: () => void;
   onGoSettings: () => void;
   totalQuestions?: number;
 }
@@ -16,7 +15,6 @@ interface GameOverProps {
 export const GameOver: React.FC<GameOverProps> = ({
   score,
   onPlayAgain,
-  onGoHome,
   onGoSettings,
   totalQuestions = 8,
 }) => {
@@ -129,7 +127,7 @@ export const GameOver: React.FC<GameOverProps> = ({
           className="w-full sm:w-auto px-5 py-2.5 rounded-xl font-fun font-bold text-base text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm cursor-pointer flex items-center justify-center gap-2 transition-colors"
         >
           <RotateCcw className="w-4 h-4" />
-          <span>Jogar Novamente</span>
+          <span>Nova Partida</span>
         </motion.button>
 
         <motion.button
@@ -139,17 +137,7 @@ export const GameOver: React.FC<GameOverProps> = ({
           className="w-full sm:w-auto px-4 py-2.5 rounded-xl font-fun font-bold text-base text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 shadow-2xs cursor-pointer flex items-center justify-center gap-2 transition-colors"
         >
           <Settings className="w-4 h-4 text-slate-600" />
-          <span>Mudar Tema</span>
-        </motion.button>
-
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={onGoHome}
-          className="w-full sm:w-auto px-4 py-2.5 rounded-xl font-fun font-semibold text-base text-slate-600 hover:text-slate-900 cursor-pointer flex items-center justify-center gap-1.5 transition-colors"
-        >
-          <Home className="w-4 h-4" />
-          <span>Início</span>
+          <span>Configurar Nova Partida</span>
         </motion.button>
       </div>
     </motion.div>

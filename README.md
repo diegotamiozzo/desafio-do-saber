@@ -26,7 +26,7 @@ ADMIN_PASS=sua_senha
 
 `GROQ_API_KEY` é usada somente pelo servidor. A aplicação não possui banco local nem gerador alternativo: se a API Groq estiver indisponível, a geração de perguntas falha explicitamente.
 
-O login é validado pelo servidor usando exclusivamente `ADMIN_USER` e `ADMIN_PASS` configurados no ambiente de execução. Não existem credenciais padrão ou de teste no código. Se uma das variáveis não estiver configurada, nenhum login será aceito.
+O login é validado pelo servidor usando exclusivamente `ADMIN_USER` e `ADMIN_PASS` configurados no ambiente de execução, se uma das variáveis não estiver configurada, nenhum login será aceito.
 
 ## Executar em desenvolvimento
 
@@ -81,8 +81,6 @@ Para visualizar apenas o build do frontend:
 ```bash
 npm run preview
 ```
-
-O projeto não possui test runner ou script de testes automatizados no `package.json`. A validação principal é feita com `npm run lint` e `npm run build`.
 
 ## Deploy no Render
 

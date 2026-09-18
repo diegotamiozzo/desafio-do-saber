@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { Play, RotateCcw, Sliders, CheckCircle, Info, Sparkles, AlertCircle } from 'lucide-react';
+import { Play, RotateCcw, Sliders, CheckCircle, Info, Sparkles, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { Question } from '../types';
 import { useGame } from '../context/GameContext';
 
@@ -9,6 +9,8 @@ interface QuestionPreviewProps {
   onStartGame: () => void;
   onRegenerate: () => void;
   onBackToConfig: () => void;
+  showQuestions: boolean;
+  onToggleQuestions: () => void;
   isGenerating?: boolean;
 }
 
@@ -17,6 +19,8 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
   onStartGame,
   onRegenerate,
   onBackToConfig,
+  showQuestions,
+  onToggleQuestions,
   isGenerating = false,
 }) => {
   const { config, state } = useGame();
@@ -75,22 +79,22 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            onClick={onStartGame}
-            className="px-6 py-3 rounded-xl font-fun font-bold text-base sm:text-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm cursor-pointer flex items-center gap-2 transition-colors"
-          >
-            <Play className="w-5 h-5 fill-white" />
-            <span>Começar Jogo</span>
-          </motion.button>
-
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
             disabled={isGenerating}
             onClick={onRegenerate}
             className="px-4 py-3 rounded-xl font-fun font-bold text-sm sm:text-base text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 shadow-2xs cursor-pointer flex items-center gap-2 transition-colors"
           >
             <RotateCcw className="w-4 h-4" />
             <span>{isGenerating ? 'Gerando...' : 'Gerar Novas'}</span>
+          </motion.button>
+
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={onToggleQuestions}
+            className="px-4 py-3 rounded-xl font-fun font-bold text-sm sm:text-base text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 shadow-2xs cursor-pointer flex items-center gap-2 transition-colors"
+          >
+            {showQuestions ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            <span>{showQuestions ? 'Ocultar Perguntas' : 'Mostrar Perguntas'}</span>
           </motion.button>
 
           <button
@@ -103,7 +107,8 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
         </div>
       </div>
 
-      {/* Lista das 10 Perguntas para Revisão */}
+      {/* Lista das perguntas para revisão */}
+      {showQuestions && (
       <div className="space-y-3">
         <h3 className="font-fun font-bold text-lg text-slate-800 px-1">
           Conferência do Mediador:
@@ -124,7 +129,6 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
                     {q.tema}
                   </span>
                 </div>
-
                 <h4 className="font-fun font-bold text-base text-slate-900 mb-2.5 leading-snug">
                   {q.pergunta}
                 </h4>
@@ -174,8 +178,9 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
           ))}
         </div>
       </div>
+      )}
 
-      {/* Botão de Início no Rodapé */}
+      {/* Ação principal para iniciar a partida */}
       <div className="pt-2 flex justify-center">
         <motion.button
           whileHover={{ scale: 1.02 }}
@@ -184,7 +189,7 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
           className="w-full sm:w-auto px-8 py-3.5 rounded-xl font-fun font-bold text-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm cursor-pointer flex items-center justify-center gap-2.5 transition-colors"
         >
           <Play className="w-5 h-5 fill-white" />
-          <span>Começar Jogo Agora</span>
+          <span>Ir para a Partida</span>
         </motion.button>
       </div>
     </div>

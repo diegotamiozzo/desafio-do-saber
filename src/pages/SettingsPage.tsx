@@ -23,6 +23,7 @@ export const SettingsPage: React.FC = () => {
   };
 
   const [step, setStep] = useState<'config' | 'preview'>('config');
+  const [showQuestions, setShowQuestions] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
 
@@ -32,6 +33,7 @@ export const SettingsPage: React.FC = () => {
     setGenerationError(null);
     try {
       await gerarPerguntas(config);
+      setShowQuestions(false);
       setStep('preview');
     } catch (err) {
       console.error('Erro ao gerar perguntas:', err);
@@ -178,6 +180,8 @@ export const SettingsPage: React.FC = () => {
             onStartGame={handleStartGame}
             onRegenerate={() => handleGenerate()}
             onBackToConfig={() => setStep('config')}
+            showQuestions={showQuestions}
+            onToggleQuestions={() => setShowQuestions((current) => !current)}
             isGenerating={isGenerating}
           />
         )}

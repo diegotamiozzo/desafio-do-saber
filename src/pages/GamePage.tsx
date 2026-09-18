@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { RotateCcw, StopCircle, AlertCircle, ArrowLeft, Play } from 'lucide-react';
 import { useGame } from '../context/GameContext';
@@ -26,23 +26,11 @@ export const GamePage: React.FC = () => {
     pararPartida,
     simularBotaoHardware,
     iniciarJogo,
-    gerarPerguntas,
   } = useGame();
 
   // Estados de confirmação para parar ou reiniciar no meio da partida
   const [showStopModal, setShowStopModal] = useState(false);
   const [showRestartModal, setShowRestartModal] = useState(false);
-
-  // Se o jogador entrar direto em /jogo sem perguntas geradas, gera e inicia
-  useEffect(() => {
-    if (!state.perguntas || state.perguntas.length === 0) {
-      gerarPerguntas().then(() => {
-        iniciarJogo();
-      });
-    } else if (state.estado === 'IDLE' || state.estado === 'READY') {
-      iniciarJogo();
-    }
-  }, [state.perguntas, state.estado, gerarPerguntas, iniciarJogo]);
 
   const isAnswering = state.estado === 'ANSWERING';
   const isWaitingButton = state.estado === 'WAITING_BUTTON';
@@ -75,12 +63,15 @@ export const GamePage: React.FC = () => {
             score={state.pontuacao}
             totalQuestions={state.perguntas.length}
             onPlayAgain={() => reiniciarPartida()}
-            onGoHome={() => navigate('/')}
             onGoSettings={() => navigate('/configuracoes')}
           />
         </main>
       </div>
     );
+  }
+
+  if (!state.perguntas || state.perguntas.length === 0) {
+    return <Navigate to="/configuracoes" replace />;
   }
 
   // Carregamento de segurança se as perguntas ainda estiverem sendo buscadas
