@@ -8,7 +8,7 @@ import { GameHeader } from '../components/GameHeader';
 export const HomePage: React.FC = () => {
   const navigate = useNavigate();
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-sky-50 via-amber-50/40 to-pink-50/30">
+    <div className="min-h-screen flex flex-col bg-linear-to-b from-sky-50 via-amber-50/40 to-pink-50/30">
       <GameHeader showBackHome={false} />
 
       <main className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 max-w-4xl mx-auto w-full">

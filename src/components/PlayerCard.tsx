@@ -34,8 +34,8 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
       transition={{ type: 'spring', stiffness: 350, damping: 25 }}
       className={`relative rounded-2xl p-4 transition-all duration-300 border-3 shadow-md ${
         isP1
-          ? 'bg-gradient-to-b from-blue-50 to-indigo-50/60 border-blue-300'
-          : 'bg-gradient-to-b from-amber-50 to-yellow-50/70 border-amber-300'
+          ? 'bg-linear-to-b from-blue-50 to-indigo-50/60 border-blue-300'
+          : 'bg-linear-to-b from-amber-50 to-yellow-50/70 border-amber-300'
       } ${
         isBuzzed
           ? isP1

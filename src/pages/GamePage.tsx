@@ -56,7 +56,7 @@ export const GamePage: React.FC = () => {
   // Se a partida estiver finalizada, exibe a tela de resultado final (GameOver)
   if (isFinished) {
     return (
-      <div className="min-h-screen flex flex-col bg-gradient-to-b from-amber-50 via-sky-50 to-purple-50">
+      <div className="min-h-screen flex flex-col bg-linear-to-b from-amber-50 via-sky-50 to-purple-50">
         <GameHeader />
         <main className="flex-1 flex items-center justify-center p-4 sm:p-6">
           <GameOver
@@ -77,7 +77,7 @@ export const GamePage: React.FC = () => {
   // Carregamento de segurança se as perguntas ainda estiverem sendo buscadas
   if (!perguntaAtualObj) {
     return (
-      <div className="min-h-screen flex flex-col bg-gradient-to-b from-sky-50 via-indigo-50 to-pink-50">
+      <div className="min-h-screen flex flex-col bg-linear-to-b from-sky-50 via-indigo-50 to-pink-50">
         <GameHeader />
         <main className="flex-1 flex flex-col items-center justify-center p-6 text-center">
           <div className="w-12 h-12 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center animate-spin mb-4">
@@ -97,7 +97,7 @@ export const GamePage: React.FC = () => {
   const isLastQuestion = state.perguntaAtual === (state.perguntas.length - 1);
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-sky-50/70 via-indigo-50/40 to-pink-50/40 pb-16 relative">
+    <div className="min-h-screen flex flex-col bg-linear-to-b from-sky-50/70 via-indigo-50/40 to-pink-50/40 pb-16 relative">
       <GameHeader />
 
       <main className="flex-1 max-w-5xl mx-auto w-full p-3 sm:p-6 flex flex-col gap-4">

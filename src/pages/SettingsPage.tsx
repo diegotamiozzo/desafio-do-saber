@@ -49,7 +49,7 @@ export const SettingsPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-slate-50 via-indigo-50/30 to-purple-50/20 pb-16">
+    <div className="min-h-screen flex flex-col bg-linear-to-b from-slate-50 via-indigo-50/30 to-purple-50/20 pb-16">
       <GameHeader />
 
       <main className="flex-1 max-w-4xl mx-auto w-full p-4 sm:p-6">

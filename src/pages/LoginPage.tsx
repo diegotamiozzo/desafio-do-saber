@@ -44,7 +44,7 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-between bg-gradient-to-b from-sky-50 via-amber-50/40 to-pink-50/30 text-slate-800">
+    <div className="min-h-screen flex flex-col justify-between bg-linear-to-b from-sky-50 via-amber-50/40 to-pink-50/30 text-slate-800">
       {/* Cabeçalho no mesmo padrão do jogo */}
       <header className="w-full bg-white/95 backdrop-blur-xs border-b border-slate-200 px-4 py-3 sticky top-0 z-20">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
