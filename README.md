@@ -22,11 +22,13 @@ Crie um arquivo `.env` na raiz usando `.env.example` como referência:
 GROQ_API_KEY=sua_chave_groq
 ADMIN_USER=seu_usuario
 ADMIN_PASS=sua_senha
+AUTH_SESSION_SECRET=uma_chave_aleatoria_longa
 ```
 
 `GROQ_API_KEY` é usada somente pelo servidor. A aplicação não possui banco local nem gerador alternativo: se a API Groq estiver indisponível, a geração de perguntas falha explicitamente.
 
 O login é validado pelo servidor usando exclusivamente `ADMIN_USER` e `ADMIN_PASS` configurados no ambiente de execução, se uma das variáveis não estiver configurada, nenhum login será aceito.
+Após o login, o servidor cria uma sessão assinada em cookie `HttpOnly`; o navegador não pode autenticar a aplicação apenas alterando o `localStorage`. Configure `AUTH_SESSION_SECRET` com um valor aleatório longo. Se ela não existir, o servidor usa `ADMIN_PASS` como compatibilidade, mas essa configuração é menos recomendada.
 
 ## Executar em desenvolvimento
 
@@ -39,7 +41,11 @@ npm run dev
 Abra [http://localhost:3000](http://localhost:3000). O servidor disponibiliza:
 
 - `GET /api/status`: verifica a disponibilidade do backend e da Groq.
+- `GET /api/auth/session`: verifica a sessão do mediador atual.
+- `POST /api/auth/logout`: encerra a sessão atual.
 - `POST /api/perguntas/gerar`: gera um lote de 4, 8 ou 12 perguntas.
+
+A geração de perguntas exige uma sessão autenticada. Tentativas de login também possuem limite básico por endereço para reduzir força bruta e abuso.
 
 Durante a partida, as teclas `1` e `2` simulam os botões dos jogadores 1 e 2. O mediador seleciona a alternativa escolhida pela criança.
 
@@ -93,6 +99,7 @@ Configuração equivalente:
 - **Health check:** `/api/status`
 - **Variável obrigatória:** `GROQ_API_KEY`
 - **Variáveis obrigatórias:** `GROQ_API_KEY`, `ADMIN_USER` e `ADMIN_PASS`
+- **Variável recomendada:** `AUTH_SESSION_SECRET`
 
 O servidor usa automaticamente a porta fornecida pelo Render através de `PORT` e usa `3000` localmente quando essa variável não existe.
 

@@ -5,7 +5,7 @@ import { Sparkles, Lock, User, ArrowRight, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export const LoginPage: React.FC = () => {
-  const { login, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, isCheckingSession } = useAuth();
   const navigate = useNavigate();
 
   // Campos limpos por padrão (sem salvar usuário nem senha na tela)
@@ -16,10 +16,10 @@ export const LoginPage: React.FC = () => {
 
   // Se já estiver autenticado, vai para a página inicial
   useEffect(() => {
-    if (isAuthenticated) {
+    if (!isCheckingSession && isAuthenticated) {
       navigate('/', { replace: true });
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, isCheckingSession, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

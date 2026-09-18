@@ -3,19 +3,128 @@ import path from 'path';
 import { createServer as createViteServer } from 'vite';
 import Groq from 'groq-sdk';
 import dotenv from 'dotenv';
+import crypto from 'crypto';
 
 dotenv.config();
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
+const SESSION_COOKIE = 'desafio_saber_session';
+const SESSION_TTL_SECONDS = 60 * 60 * 8;
+const SESSION_SECRET = process.env.AUTH_SESSION_SECRET || process.env.ADMIN_PASS || '';
+const loginAttempts = new Map<string, { count: number; resetAt: number }>();
 
 app.use(express.json());
+
+function parseCookies(header: string | undefined): Record<string, string> {
+  if (!header) return {};
+  return Object.fromEntries(
+    header.split(';').flatMap((part) => {
+      const separator = part.indexOf('=');
+      if (separator < 0) return [];
+      return [[part.slice(0, separator).trim(), decodeURIComponent(part.slice(separator + 1).trim())]];
+    })
+  );
+}
+
+function signSession(username: string, expiresAt: number): string {
+  const payload = Buffer.from(JSON.stringify({ username, expiresAt })).toString('base64url');
+  const signature = crypto.createHmac('sha256', SESSION_SECRET).update(payload).digest('base64url');
+  return `${payload}.${signature}`;
+}
+
+function getSessionUsername(req: express.Request): string | null {
+  if (!SESSION_SECRET) return null;
+  const token = parseCookies(req.headers.cookie)[SESSION_COOKIE];
+  if (!token) return null;
+
+  const [payload, signature] = token.split('.');
+  if (!payload || !signature) return null;
+
+  const expectedSignature = crypto.createHmac('sha256', SESSION_SECRET).update(payload).digest();
+  const receivedSignature = Buffer.from(signature, 'base64url');
+  if (
+    receivedSignature.length !== expectedSignature.length ||
+    !crypto.timingSafeEqual(receivedSignature, expectedSignature)
+  ) {
+    return null;
+  }
+
+  try {
+    const session = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8')) as {
+      username?: unknown;
+      expiresAt?: unknown;
+    };
+    return typeof session.username === 'string' &&
+      typeof session.expiresAt === 'number' &&
+      session.expiresAt > Math.floor(Date.now() / 1000)
+      ? session.username
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+function requireSession(req: express.Request, res: express.Response, next: express.NextFunction) {
+  if (!getSessionUsername(req)) {
+    return res.status(401).json({
+      success: false,
+      error: 'Sessão expirada. Faça login novamente.',
+    });
+  }
+  return next();
+}
+
+function getClientAddress(req: express.Request): string {
+  return req.ip || req.socket.remoteAddress || 'unknown';
+}
+
+function isLoginRateLimited(address: string): boolean {
+  const now = Date.now();
+  const current = loginAttempts.get(address);
+  if (!current || current.resetAt <= now) {
+    loginAttempts.set(address, { count: 0, resetAt: now + 15 * 60 * 1000 });
+    return false;
+  }
+  return current.count >= 10;
+}
+
+function recordLoginFailure(address: string): void {
+  const now = Date.now();
+  const current = loginAttempts.get(address);
+  if (!current || current.resetAt <= now) {
+    loginAttempts.set(address, { count: 1, resetAt: now + 15 * 60 * 1000 });
+    return;
+  }
+  current.count += 1;
+}
+
+const forbiddenChildSafetyTerms = [
+  'violência',
+  'violencia',
+  'arma',
+  'sangue',
+  'morte',
+  'crime',
+  'droga',
+  'sexo',
+  'sexual',
+  'pornografia',
+  'suicídio',
+  'suicidio',
+];
+
+function hasUnsafeChildContent(value: string): boolean {
+  const normalized = value.toLocaleLowerCase('pt-BR');
+  return forbiddenChildSafetyTerms.some((term) => normalized.includes(term));
+}
 
 app.post('/api/auth/login', (req, res) => {
   const configuredUser = process.env.ADMIN_USER?.trim();
   const configuredPassword = process.env.ADMIN_PASS;
   const username = typeof req.body?.username === 'string' ? req.body.username.trim() : '';
   const password = typeof req.body?.password === 'string' ? req.body.password : '';
+  const clientAddress = getClientAddress(req);
 
   if (!configuredUser || !configuredPassword) {
     return res.status(503).json({
@@ -24,14 +133,49 @@ app.post('/api/auth/login', (req, res) => {
     });
   }
 
-  if (username !== configuredUser || password !== configuredPassword) {
+  if (isLoginRateLimited(clientAddress)) {
+    return res.status(429).json({
+      success: false,
+      error: 'Muitas tentativas de login. Tente novamente em alguns minutos.',
+    });
+  }
+
+  const validUser = username === configuredUser;
+  const configuredPasswordBuffer = Buffer.from(configuredPassword);
+  const passwordBuffer = Buffer.from(password);
+  const validPassword =
+    configuredPasswordBuffer.length === passwordBuffer.length &&
+    crypto.timingSafeEqual(configuredPasswordBuffer, passwordBuffer);
+
+  if (!validUser || !validPassword) {
+    recordLoginFailure(clientAddress);
     return res.status(401).json({
       success: false,
       error: 'Usuário ou senha incorretos.',
     });
   }
 
-  return res.json({ success: true, user: configuredUser });
+  loginAttempts.delete(clientAddress);
+  const expiresAt = Math.floor(Date.now() / 1000) + SESSION_TTL_SECONDS;
+  return res
+    .setHeader(
+      'Set-Cookie',
+      `${SESSION_COOKIE}=${encodeURIComponent(signSession(configuredUser, expiresAt))}; HttpOnly; Path=/; Max-Age=${SESSION_TTL_SECONDS}; SameSite=Lax${process.env.NODE_ENV === 'production' ? '; Secure' : ''}`
+    )
+    .json({ success: true, user: configuredUser });
+});
+
+app.get('/api/auth/session', (req, res) => {
+  const username = getSessionUsername(req);
+  return res.json({ success: Boolean(username), user: username });
+});
+
+app.post('/api/auth/logout', (req, res) => {
+  res.setHeader(
+    'Set-Cookie',
+    `${SESSION_COOKIE}=; HttpOnly; Path=/; Max-Age=0; SameSite=Lax${process.env.NODE_ENV === 'production' ? '; Secure' : ''}`
+  );
+  return res.json({ success: true });
 });
 
 // Inicializa o cliente Groq de forma segura
@@ -59,7 +203,7 @@ app.get('/api/status', (req, res) => {
 });
 
 // Endpoint para gerar perguntas inéditas via Groq (modelo openai/gpt-oss-20b)
-app.post('/api/perguntas/gerar', async (req, res) => {
+app.post('/api/perguntas/gerar', requireSession, async (req, res) => {
   const { tema = 'Animais', temaPersonalizado, contexto, dificuldade = 'facil' } = req.body || {};
   const requestedQuantity = Number(req.body?.quantidade);
   const quantidade = [4, 8, 12].includes(requestedQuantity) ? requestedQuantity : 8;
@@ -171,7 +315,7 @@ Regras Estritas:
         }
       }
 
-      return {
+      const normalizedQuestion = {
         id: idx + 1,
         pergunta: String(q.pergunta || q.question || '').trim(),
         alternativas: validAlternatives,
@@ -180,6 +324,17 @@ Regras Estritas:
         tema: String(q.tema || finalTheme).trim(),
         curiosidade: q.curiosidade ? String(q.curiosidade).trim() : undefined,
       };
+
+      const questionText = [
+        normalizedQuestion.pergunta,
+        ...normalizedQuestion.alternativas.map((alternative) => alternative.texto),
+        normalizedQuestion.curiosidade || '',
+      ].join(' ');
+      if (hasUnsafeChildContent(questionText)) {
+        throw new Error('A API Groq retornou conteúdo incompatível com o público infantil.');
+      }
+
+      return normalizedQuestion;
     });
 
     return res.json({

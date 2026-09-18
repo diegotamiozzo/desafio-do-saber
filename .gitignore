@@ -2,6 +2,7 @@
 node_modules/
 
 # Build output
+dist/
 build/
 coverage/
 .vite/
@@ -20,7 +21,6 @@ pnpm-debug.log*
 !.env.example
 
 # OS/editor files
-.github/copilot-instructions.md
 .DS_Store
 Thumbs.db
 .vscode/

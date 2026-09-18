@@ -13,3 +13,5 @@ services:
         sync: false
       - key: ADMIN_PASS
         sync: false
+      - key: AUTH_SESSION_SECRET
+        sync: false
