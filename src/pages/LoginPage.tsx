@@ -12,6 +12,7 @@ export const LoginPage: React.FC = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Se já estiver autenticado, vai para a página inicial
   useEffect(() => {
@@ -20,7 +21,7 @@ export const LoginPage: React.FC = () => {
     }
   }, [isAuthenticated, navigate]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
 
@@ -29,11 +30,16 @@ export const LoginPage: React.FC = () => {
       return;
     }
 
-    const ok = login(username, password);
-    if (ok) {
-      navigate('/', { replace: true });
-    } else {
-      setErrorMsg('Usuário ou senha incorretos.');
+    setIsSubmitting(true);
+    try {
+      const ok = await login(username, password);
+      if (ok) {
+        navigate('/', { replace: true });
+      } else {
+        setErrorMsg('Usuário ou senha incorretos.');
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -131,9 +137,10 @@ export const LoginPage: React.FC = () => {
 
               <button
                 type="submit"
+                disabled={isSubmitting}
                 className="w-full py-3 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-fun font-bold text-base flex items-center justify-center gap-2 shadow-md shadow-indigo-200 transition-all cursor-pointer"
               >
-                <span>Acessar Desafio</span>
+                <span>{isSubmitting ? 'Validando...' : 'Acessar Desafio'}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </form>

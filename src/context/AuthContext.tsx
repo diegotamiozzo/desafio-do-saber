@@ -3,7 +3,7 @@ import React, { createContext, useContext, useState } from 'react';
 interface AuthContextType {
   isAuthenticated: boolean;
   user: string | null;
-  login: (username: string, pass: string) => boolean;
+  login: (username: string, pass: string) => Promise<boolean>;
   logout: () => void;
 }
 
@@ -22,23 +22,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return localStorage.getItem(`${AUTH_STORAGE_KEY}_user`);
   });
 
-  const login = (username: string, pass: string): boolean => {
-    const expectedUser = import.meta.env.VITE_ADMIN_USER;
-    const expectedPass = import.meta.env.VITE_ADMIN_PASS;
+  const login = async (username: string, pass: string): Promise<boolean> => {
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: username.trim(), password: pass }),
+      });
 
-    if (
-      expectedUser &&
-      expectedPass &&
-      username.trim() === expectedUser.trim() &&
-      pass === expectedPass
-    ) {
+      if (!response.ok) return false;
+
+      const data = await response.json();
+      if (data.success !== true || typeof data.user !== 'string') return false;
+
       setIsAuthenticated(true);
-      setUser(username.trim());
+      setUser(data.user);
       localStorage.setItem(AUTH_STORAGE_KEY, 'true');
-      localStorage.setItem(`${AUTH_STORAGE_KEY}_user`, username.trim());
+      localStorage.setItem(`${AUTH_STORAGE_KEY}_user`, data.user);
       return true;
+    } catch (error) {
+      console.error('Não foi possível validar o login:', error);
+      return false;
     }
-    return false;
   };
 
   const logout = () => {

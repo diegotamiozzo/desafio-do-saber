@@ -11,6 +11,29 @@ const PORT = Number(process.env.PORT) || 3000;
 
 app.use(express.json());
 
+app.post('/api/auth/login', (req, res) => {
+  const configuredUser = process.env.ADMIN_USER?.trim();
+  const configuredPassword = process.env.ADMIN_PASS;
+  const username = typeof req.body?.username === 'string' ? req.body.username.trim() : '';
+  const password = typeof req.body?.password === 'string' ? req.body.password : '';
+
+  if (!configuredUser || !configuredPassword) {
+    return res.status(503).json({
+      success: false,
+      error: 'Credenciais administrativas não configuradas no servidor.',
+    });
+  }
+
+  if (username !== configuredUser || password !== configuredPassword) {
+    return res.status(401).json({
+      success: false,
+      error: 'Usuário ou senha incorretos.',
+    });
+  }
+
+  return res.json({ success: true, user: configuredUser });
+});
+
 // Inicializa o cliente Groq de forma segura
 let groqClient: Groq | null = null;
 function getGroq(): Groq | null {
@@ -170,8 +193,8 @@ Regras Estritas:
 
     const isRateLimit = errorMsg.includes('429') || errorMsg.includes('rate_limit') || errorMsg.includes('Rate limit');
     const notice = isRateLimit
-      ? 'Limite temporário por minuto da Groq atingido. O gerador inteligente local garantiu as perguntas sobre o seu tema.'
-      : 'IA Groq temporariamente indisponível. Ativando gerador temático inteligente.';
+      ? 'Limite temporário por minuto da Groq atingido. Tente novamente mais tarde.'
+      : 'IA Groq temporariamente indisponível. Tente novamente mais tarde.';
 
     return res.status(isRateLimit ? 429 : 502).json({
       success: false,

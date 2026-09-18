@@ -20,13 +20,13 @@ Crie um arquivo `.env` na raiz usando `.env.example` como referência:
 
 ```env
 GROQ_API_KEY=sua_chave_groq
-VITE_ADMIN_USER=seu_usuario
-VITE_ADMIN_PASS=sua_senha
+ADMIN_USER=seu_usuario
+ADMIN_PASS=sua_senha
 ```
 
 `GROQ_API_KEY` é usada somente pelo servidor. A aplicação não possui banco local nem gerador alternativo: se a API Groq estiver indisponível, a geração de perguntas falha explicitamente.
 
-O login aceita exclusivamente os valores de `VITE_ADMIN_USER` e `VITE_ADMIN_PASS` configurados no ambiente de build. Não existem credenciais padrão ou de teste no código. Se uma das variáveis não estiver configurada, nenhum login será aceito. Como variáveis `VITE_*` são incorporadas ao frontend, não devem ser consideradas um mecanismo de segurança para produção.
+O login é validado pelo servidor usando exclusivamente `ADMIN_USER` e `ADMIN_PASS` configurados no ambiente de execução. Não existem credenciais padrão ou de teste no código. Se uma das variáveis não estiver configurada, nenhum login será aceito.
 
 ## Executar em desenvolvimento
 
@@ -94,7 +94,7 @@ Configuração equivalente:
 - **Start command:** `npm start`
 - **Health check:** `/api/status`
 - **Variável obrigatória:** `GROQ_API_KEY`
-- **Variáveis obrigatórias:** `VITE_ADMIN_USER` e `VITE_ADMIN_PASS`
+- **Variáveis obrigatórias:** `GROQ_API_KEY`, `ADMIN_USER` e `ADMIN_PASS`
 
 O servidor usa automaticamente a porta fornecida pelo Render através de `PORT` e usa `3000` localmente quando essa variável não existe.
 

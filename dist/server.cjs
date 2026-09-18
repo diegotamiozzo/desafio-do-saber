@@ -31,6 +31,25 @@ import_dotenv.default.config();
 var app = (0, import_express.default)();
 var PORT = Number(process.env.PORT) || 3e3;
 app.use(import_express.default.json());
+app.post("/api/auth/login", (req, res) => {
+  const configuredUser = process.env.ADMIN_USER?.trim();
+  const configuredPassword = process.env.ADMIN_PASS;
+  const username = typeof req.body?.username === "string" ? req.body.username.trim() : "";
+  const password = typeof req.body?.password === "string" ? req.body.password : "";
+  if (!configuredUser || !configuredPassword) {
+    return res.status(503).json({
+      success: false,
+      error: "Credenciais administrativas n\xE3o configuradas no servidor."
+    });
+  }
+  if (username !== configuredUser || password !== configuredPassword) {
+    return res.status(401).json({
+      success: false,
+      error: "Usu\xE1rio ou senha incorretos."
+    });
+  }
+  return res.json({ success: true, user: configuredUser });
+});
 var groqClient = null;
 function getGroq() {
   const apiKey = process.env.GROQ_API_KEY;
@@ -166,7 +185,7 @@ Regras Estritas:
     const errorMsg = error?.message || String(error);
     console.warn("Groq API retornou erro:", errorMsg);
     const isRateLimit = errorMsg.includes("429") || errorMsg.includes("rate_limit") || errorMsg.includes("Rate limit");
-    const notice = isRateLimit ? "Limite tempor\xE1rio por minuto da Groq atingido. O gerador inteligente local garantiu as perguntas sobre o seu tema." : "IA Groq temporariamente indispon\xEDvel. Ativando gerador tem\xE1tico inteligente.";
+    const notice = isRateLimit ? "Limite tempor\xE1rio por minuto da Groq atingido. Tente novamente mais tarde." : "IA Groq temporariamente indispon\xEDvel. Tente novamente mais tarde.";
     return res.status(isRateLimit ? 429 : 502).json({
       success: false,
       error: errorMsg,
