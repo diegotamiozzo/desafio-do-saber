@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: desafio-do-saber-api
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/status
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false
